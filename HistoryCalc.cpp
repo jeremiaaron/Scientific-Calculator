@@ -1,6 +1,7 @@
 #include "HistoryCalc.h"
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 using namespace std;
 
 // Queue is full when size
