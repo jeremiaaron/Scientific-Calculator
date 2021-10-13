@@ -207,6 +207,23 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
     return valsTail->data;
 }
 
+// Changes here
+// Erases `count` lines, including the current line
+void eraseLines(int count) {
+    count++;
+    if (count > 0) {
+        std::cout << "\x1b[2K"; // Delete current line
+        // i=1 because we included the first line
+        for (int i = 1; i < count; i++) {
+            std::cout
+            << "\x1b[1A" // Move cursor up one
+            << "\x1b[2K"; // Delete the entire line
+        }
+        std::cout << "\r"; // Resume the cursor at beginning of line
+    }
+} // Changes here
+
+
 //FUNCTION MAIN MENU
 int mainMenu() {
     int menu;
@@ -244,20 +261,93 @@ int main() {
             cout << "Available operators: +, -, *, /, ^, (, ), sin, cos, tan, sqrt, log, ln" << endl;
             cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl;
 
-            string input;
-
-            cout << "Enter an expression:" << endl;
-            getline(cin, input);
-            while(input.compare("DONE") != 0) {
-                float result = inputResult(input, valsHead, valsTail, opsHead, opsTail);
-
-                cout << "= " << result << endl << endl;
-                history->enqueue(history, input, result);
+			string input;
+			int error = 0;
+    		int openBracket = 0, closeBracket = 0, i = 0, firstCalc = 1;
+			
+		    do { // CHANGES HERE
                 
-                cout << "Enter an expression:" << endl;
-                getline(cin, input);
-            }
-        }
+                if(firstCalc == 1) {
+        			firstCalc++;
+				}else if(error == 1) {
+           			eraseLines(3);
+           			cout << "Please enter an appropriate expression" << endl;
+               		error--;
+				}
+		    	
+		    	cout <<  "Enter an expression: ";
+        		getline(cin, input);
+        		
+   				closeBracket = 0;
+       			openBracket = 0;
+       			
+       			for(i = 0; i < input.length(); i++) {
+       				
+           			if(input[i] == ' ' || input[i] == '\n') {
+               			continue;
+	            	}
+           			else if(input[i] == '(') {
+               			openBracket++;
+               			continue;
+           			}
+           			else if(input[i] == ')') {
+               			closeBracket++;
+               			continue;
+           			}
+           			else if(isdigit(input[i])) {
+               			continue;
+           			}
+           			else if (input[i] == '^' && isdigit(input[i+1])) {
+               			continue;
+           			}
+           			else if(input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/') {
+               			if(isdigit(input[i+1]) || input[i+1] == 's' || input[i+1] == 'c' || input[i+1] == 't' || input[i+1] == 'l')
+                   			continue;
+           			}
+           			else if(input[i] == 's' && input[i+1] == 'q' && input[i+2] == 'r' && input[i+3] == 't') {
+               			i += 3;
+               			continue;
+           			}
+           			else if(input[i] == 's' && input[i+1] == 'i' && input[i+2] == 'n') {
+               			i += 2;
+               			continue;
+           			}
+           			else if(input[i] == 'c' && input[i+1] == 'o' && input[i+2] == 's') {
+               			i += 2;
+               			continue;
+           			}
+           			else if(input[i] == 't' && input[i+1] == 'a' && input[i+2] == 'n') {
+               			i += 2;
+               			continue;
+           			}
+           			else if(input[i] == 'l' && input[i+1] == 'o' && input[i+2] == 'g') {
+               			i += 2;
+               			continue;
+           			}
+           			else if(input[i] == 'l' && input[i+1] == 'n') {
+               			i += 1;
+               			continue;
+           			}
+           			else if(input == "DONE") {
+           				error++;
+						break;
+					}
+					else if(input[i] == '=') {
+						error++; break;
+					}else error++; break;
+       			}
+				
+				if(openBracket != closeBracket || input[0] == ')' || input[input.length()-1] == '(' && error != 1) {
+					error++;
+				}
+				
+				if(error == 0) {
+					float result = inputResult(input, valsHead, valsTail, opsHead, opsTail);
+		        	cout << "= " << result << endl << endl;
+		        	history->enqueue(history, input, result);
+				}
+			}while(input.compare("DONE") != 0);
+        } //CHANGES HERE
 
         //HISTORY MENU
         else if(menu == 2) {
@@ -269,12 +359,13 @@ int main() {
             cout << "3. Delete whole history" << endl;
             cout << "0. Back to main menu" << endl << endl;
 
-            int option;
-
-            cout << "Enter your option: ";
-            cin >> option;
-            while(option != 0) {
-                if(option == 1) {
+            float option;
+			
+			do{
+				cout << "Enter your option: ";
+				cin >> option;
+				
+				if(option == 1) {
                     history->showHistory(history);
                 }
 
@@ -301,10 +392,7 @@ int main() {
 
                     cout << endl;
                 }
-
-                cout << "Enter your option: ";
-                cin >> option;
-            }
+			}while(option != 0);
         }
 
         system("cls"); //clears current menu before moving to another menu
