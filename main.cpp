@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cctype>
+//#include <cctype>
 #include <cmath>
 #include "Lists.h"
 #include "HistoryCalc.h"
@@ -8,6 +8,7 @@ using namespace std;
 //--------------------------------------------------------------------------------------
 //FUNCTIONS FOR EXPRESSION EVALUATION (+, -, *, /, ^, sin, cos, tan, sqrt, log, ln)
 
+//calculate using basic operators
 float basicOpCalculate(float x, float y, char op) {
     if(op == '+') return (x + y);
     if(op == '-') return (x - y);
@@ -16,6 +17,7 @@ float basicOpCalculate(float x, float y, char op) {
     if(op == '^') return pow(x, y);
     return 0;
 }
+
 
 float advOpCalculate(float x, char op) {
     
@@ -51,17 +53,53 @@ int opPrecedence(char op) {
         return 0;
 }
 
+//Erases 'count' lines, including current line
+void eraseLines(int count) {
+    count++;
+
+    if (count > 0) {
+        cout << "\x1b[2K"; //delete current line
+
+        for (int i = 1; i < count; i++) {
+            cout
+            << "\x1b[1A" //move up one line
+            << "\x1b[2K"; //delete current line
+        }
+
+        cout << "\r"; //move cursor to beginning of line
+    }
+}
+
+void eraseWarning(string input) {
+    cout << "\x1b[1A" << "\x1b[2K";
+    cout << "\x1b[1A" << "\x1b[2K";
+    cout << "\x1b[1A" << "\x1b[2K";
+
+    cout << "\nEnter an expression:" << endl;
+    cout << input << endl;
+    
+    cout << "\r";
+}
+
 float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Ops* opsTail) {
+    bool lastIsDigit = false;
+
     for(int i = 0; i < input.length(); i++) {
+        //skipping whitespaces
         if(input[i] == ' ') {
             continue;
         }
-
+        
+        //pushing front brackets into ops list
         else if(input[i] == '(') {
             opsHead->pushToTail(&opsHead, &opsTail, input[i]);
+            lastIsDigit = false;
         }
 
+        //pushing sin, cos, tan, sqrt, log, ln into ops list
         else if(isalpha(input[i])) {
+            lastIsDigit = false;
+
             if(input[i] == 's') {
                 if(i < input.length() - 2 && input[i + 1] == 'i' && input[i + 2] == 'n') {
                     opsHead->pushToTail(&opsHead, &opsTail, 's');
@@ -71,6 +109,7 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                     opsHead->pushToTail(&opsHead, &opsTail, 'q');
                     i += 3;
                 }
+                else return NAN;
             }
 
             else if(i < input.length() - 2 && input[i] == 'c' && input[i + 1] == 'o' && input[i + 2] == 's') {
@@ -93,9 +132,13 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                     opsHead->pushToTail(&opsHead, &opsTail, 'e');
                     i++;
                 }
+                else return NAN;
             }
+
+            else return NAN;
         }
 
+        //pushing number value into list
         else if(isdigit(input[i])) {
             float temp = 0;
 
@@ -103,16 +146,35 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                 temp = (temp * 10) + (input[i] - '0');
                 i++;
             }
-
-            valsHead->pushToTail(&valsHead, &valsTail, temp);
             i--;
+
+            if(!lastIsDigit && (opsHead != NULL || valsHead != NULL)) {
+                if(opsTail->data == '+') {
+                    opsHead->deleteTail(&opsHead, &opsTail);
+                    valsHead->pushToTail(&valsHead, &valsTail, temp);
+                }
+                else if(opsTail->data == '-') {
+                    opsHead->deleteTail(&opsHead, &opsTail);
+                    valsHead->pushToTail(&valsHead, &valsTail, (-1) * temp);
+                }
+                else valsHead->pushToTail(&valsHead, &valsTail, temp);
+            }
+
+            else valsHead->pushToTail(&valsHead, &valsTail, temp);
+            
+            lastIsDigit = true;
         }
 
+        //calculating inside parentheses
         else if(input[i] == ')') {
             while(opsHead != NULL && opsTail->data != '(') {
                 char tailOp = opsTail->data;
 
-                if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
+                if(valsHead == NULL || ((tailOp == '+' || tailOp == '-' || tailOp == '*' || tailOp == '/' || tailOp == '^') && valsHead->next == NULL)) {
+                    return NAN;
+                }
+
+                else if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
                     float x = valsTail->data;
                     valsHead->deleteTail(&valsHead, &valsTail);
 
@@ -141,44 +203,65 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
             if(opsHead != NULL) opsHead->deleteTail(&opsHead, &opsTail);
         }
         
+        //pushing + - * / ^ into ops list (calculates previous if current ops' precedence is lower/equal)
         else {
-            while(opsHead != NULL && opPrecedence(input[i]) <= opPrecedence(opsTail->data)) {
-                char tailOp = opsTail->data;
+            if(opsHead != NULL && lastIsDigit) {
+                while(opsHead != NULL && opPrecedence(input[i]) <= opPrecedence(opsTail->data)) {
+                    char tailOp = opsTail->data;
 
-                if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
-                    float x = valsTail->data;
-                    valsHead->deleteTail(&valsHead, &valsTail);
+                    if(valsHead == NULL || ((tailOp == '+' || tailOp == '-' || tailOp == '*' || tailOp == '/' || tailOp == '^') && valsHead->next == NULL)) {
+                        return NAN;
+                    }
 
-                    char op = opsTail->data;
-                    opsHead->deleteTail(&opsHead, &opsTail);
+                    else if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
+                        float x = valsTail->data;
+                        valsHead->deleteTail(&valsHead, &valsTail);
 
-                    float result = advOpCalculate(x, op);
-                    valsHead->pushToTail(&valsHead, &valsTail, result);
-                }
+                        char op = opsTail->data;
+                        opsHead->deleteTail(&opsHead, &opsTail);
 
-                else {
-                    float b = valsTail->data;
-                    valsHead->deleteTail(&valsHead, &valsTail);
+                        float result = advOpCalculate(x, op);
+                        valsHead->pushToTail(&valsHead, &valsTail, result);
+                    }
 
-                    float a = valsTail->data;
-                    valsHead->deleteTail(&valsHead, &valsTail);
+                    else {
+                        float b = valsTail->data;
+                        valsHead->deleteTail(&valsHead, &valsTail);
 
-                    char op = opsTail->data;
-                    opsHead->deleteTail(&opsHead, &opsTail);
+                        float a = valsTail->data;
+                        valsHead->deleteTail(&valsHead, &valsTail);
 
-                    float result = basicOpCalculate(a, b, op);
-                    valsHead->pushToTail(&valsHead, &valsTail, result);
+                        char op = opsTail->data;
+                        opsHead->deleteTail(&opsHead, &opsTail);
+
+                        float result = basicOpCalculate(a, b, op);
+                        valsHead->pushToTail(&valsHead, &valsTail, result);
+                    }
                 }
             }
-    
-            opsHead->pushToTail(&opsHead, &opsTail, input[i]);
+
+            if(input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/' || input[i] == '^' ||
+               input[i] == 's' || input[i] == 'c' || input[i] == 't' || input[i] == 'q' || input[i] == 'l' || input[i] == 'e') {
+                if(input[i] != '+' && input[i] != '-') {
+                    lastIsDigit = false;
+                }
+
+                opsHead->pushToTail(&opsHead, &opsTail, input[i]);
+            }
+               
+            else return NAN;
         }
     }
 
+    //calculate remaining operations
     while(opsHead != NULL) {
         char tailOp = opsTail->data;
 
-        if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
+        if(valsHead == NULL || ((tailOp == '+' || tailOp == '-' || tailOp == '*' || tailOp == '/' || tailOp == '^') && valsHead->next == NULL)) {
+            return NAN;
+        }
+
+        else if(tailOp == 's' || tailOp == 'c' || tailOp == 't' || tailOp == 'q' || tailOp == 'l' || tailOp == 'e') {
             float x = valsTail->data;
             valsHead->deleteTail(&valsHead, &valsTail);
 
@@ -206,23 +289,6 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
 
     return valsTail->data;
 }
-
-// Changes here
-// Erases `count` lines, including the current line
-void eraseLines(int count) {
-    count++;
-    if (count > 0) {
-        std::cout << "\x1b[2K"; // Delete current line
-        // i=1 because we included the first line
-        for (int i = 1; i < count; i++) {
-            std::cout
-            << "\x1b[1A" // Move cursor up one
-            << "\x1b[2K"; // Delete the entire line
-        }
-        std::cout << "\r"; // Resume the cursor at beginning of line
-    }
-} // Changes here
-
 
 //FUNCTION MAIN MENU
 int mainMenu() {
@@ -261,93 +327,32 @@ int main() {
             cout << "Available operators: +, -, *, /, ^, (, ), sin, cos, tan, sqrt, log, ln" << endl;
             cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl;
 
-			string input;
-			int error = 0;
-    		int openBracket = 0, closeBracket = 0, i = 0, firstCalc = 1;
-			
-		    do { // CHANGES HERE
+            string input;
+
+            cout << "Enter an expression:" << endl;
+            getline(cin, input);
+            while(input.compare("DONE") != 0) {
+                static int error = 0;
+                float result = inputResult(input, valsHead, valsTail, opsHead, opsTail);
+
+                if(isnan(result)) {
+                    if(error == 0) error++;
+                    eraseLines(3);
+                    cout << "Please enter an appropriate expression" << endl;
+                }
+                else {
+                    if(error > 0) {
+                        eraseWarning(input);
+                        error = 0;
+                    }
+                    cout << "= " << result << endl << endl;
+                    history->enqueue(history, input, result);
+                }
                 
-                if(firstCalc == 1) {
-        			firstCalc++;
-				}else if(error == 1) {
-           			eraseLines(3);
-           			cout << "Please enter an appropriate expression" << endl;
-               		error--;
-				}
-		    	
-		    	cout <<  "Enter an expression: ";
-        		getline(cin, input);
-        		
-   				closeBracket = 0;
-       			openBracket = 0;
-       			
-       			for(i = 0; i < input.length(); i++) {
-       				
-           			if(input[i] == ' ' || input[i] == '\n') {
-               			continue;
-	            	}
-           			else if(input[i] == '(') {
-               			openBracket++;
-               			continue;
-           			}
-           			else if(input[i] == ')') {
-               			closeBracket++;
-               			continue;
-           			}
-           			else if(isdigit(input[i])) {
-               			continue;
-           			}
-           			else if (input[i] == '^' && isdigit(input[i+1])) {
-               			continue;
-           			}
-           			else if(input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/') {
-               			if(isdigit(input[i+1]) || input[i+1] == 's' || input[i+1] == 'c' || input[i+1] == 't' || input[i+1] == 'l')
-                   			continue;
-           			}
-           			else if(input[i] == 's' && input[i+1] == 'q' && input[i+2] == 'r' && input[i+3] == 't') {
-               			i += 3;
-               			continue;
-           			}
-           			else if(input[i] == 's' && input[i+1] == 'i' && input[i+2] == 'n') {
-               			i += 2;
-               			continue;
-           			}
-           			else if(input[i] == 'c' && input[i+1] == 'o' && input[i+2] == 's') {
-               			i += 2;
-               			continue;
-           			}
-           			else if(input[i] == 't' && input[i+1] == 'a' && input[i+2] == 'n') {
-               			i += 2;
-               			continue;
-           			}
-           			else if(input[i] == 'l' && input[i+1] == 'o' && input[i+2] == 'g') {
-               			i += 2;
-               			continue;
-           			}
-           			else if(input[i] == 'l' && input[i+1] == 'n') {
-               			i += 1;
-               			continue;
-           			}
-           			else if(input == "DONE") {
-           				error++;
-						break;
-					}
-					else if(input[i] == '=') {
-						error++; break;
-					}else error++; break;
-       			}
-				
-				if(openBracket != closeBracket || input[0] == ')' || input[input.length()-1] == '(' && error != 1) {
-					error++;
-				}
-				
-				if(error == 0) {
-					float result = inputResult(input, valsHead, valsTail, opsHead, opsTail);
-		        	cout << "= " << result << endl << endl;
-		        	history->enqueue(history, input, result);
-				}
-			}while(input.compare("DONE") != 0);
-        } //CHANGES HERE
+                cout << "Enter an expression:" << endl;
+                getline(cin, input);
+            }
+        }
 
         //HISTORY MENU
         else if(menu == 2) {
@@ -359,13 +364,12 @@ int main() {
             cout << "3. Delete whole history" << endl;
             cout << "0. Back to main menu" << endl << endl;
 
-            float option;
-			
-			do{
-				cout << "Enter your option: ";
-				cin >> option;
-				
-				if(option == 1) {
+            int option;
+
+            cout << "Enter your option: ";
+            cin >> option;
+            while(option != 0) {
+                if(option == 1) {
                     history->showHistory(history);
                 }
 
@@ -392,7 +396,10 @@ int main() {
 
                     cout << endl;
                 }
-			}while(option != 0);
+
+                cout << "Enter your option: ";
+                cin >> option;
+            }
         }
 
         system("cls"); //clears current menu before moving to another menu
