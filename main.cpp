@@ -1,5 +1,4 @@
 #include <iostream>
-//#include <cctype>
 #include <cmath>
 #include "Lists.h"
 #include "HistoryCalc.h"
@@ -152,7 +151,7 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
             }
             i--;
 
-            // What does this part do?
+            // Checks for unary operators
             if(!lastIsDigit && (opsHead != NULL || valsHead != NULL)) {
                 if(opsTail->data == '+') {
                     opsHead->deleteTail(&opsHead, &opsTail);
@@ -247,7 +246,7 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
             
             if(input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/' || input[i] == '^' ||
                input[i] == 's' || input[i] == 'c' || input[i] == 't' || input[i] == 'q' || input[i] == 'l' || input[i] == 'e') {
-                // What does this part do?
+                // Change lastIsDigit to false for checking unary operator later on
                 if(input[i] != '+' && input[i] != '-') {
                     lastIsDigit = false;
                 }
@@ -255,7 +254,7 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                 opsHead->pushToTail(&opsHead, &opsTail, input[i]);
             }
                
-            else return NAN;
+            else return NAN; //if the input is a character other than operators, return NAN
         }
     }
 
@@ -293,10 +292,10 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
         }
     }
 
-    return valsTail->data;
+    return valsTail->data; //return final result
 }
 
-//FUNCTION MAIN MENU
+//FUNCTION FOR MAIN MENU
 int mainMenu() {
     int menu;
     cout << "=================================" << endl;
@@ -315,7 +314,7 @@ int mainMenu() {
     return menu;
 }
 
-//DRIVER PROGRAM
+//MAIN FUNCTION
 int main() {
     Vals* valsHead = NULL, *valsTail = NULL;
     Ops* opsHead = NULL, *opsTail = NULL;
