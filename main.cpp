@@ -101,6 +101,8 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
             lastIsDigit = false;
 
             if(input[i] == 's') {
+                // First, check if there exist two more characters after 's' to make sure that 's' is not alone
+                // and check if the following characters are 'i' and 'n'
                 if(i < input.length() - 2 && input[i + 1] == 'i' && input[i + 2] == 'n') {
                     opsHead->pushToTail(&opsHead, &opsTail, 's');
                     i += 2;
@@ -109,6 +111,7 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                     opsHead->pushToTail(&opsHead, &opsTail, 'q');
                     i += 3;
                 }
+                // returns nan if neither conditional statements are fulfilled
                 else return NAN;
             }
 
@@ -142,12 +145,14 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
         else if(isdigit(input[i])) {
             float temp = 0;
 
+            // To check if the number has units, tens, hundreds, or thousands, etc
             while(i < input.length() && isdigit(input[i])) {
                 temp = (temp * 10) + (input[i] - '0');
                 i++;
             }
             i--;
 
+            // What does this part do?
             if(!lastIsDigit && (opsHead != NULL || valsHead != NULL)) {
                 if(opsTail->data == '+') {
                     opsHead->deleteTail(&opsHead, &opsTail);
@@ -239,9 +244,10 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
                     }
                 }
             }
-
+            
             if(input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/' || input[i] == '^' ||
                input[i] == 's' || input[i] == 'c' || input[i] == 't' || input[i] == 'q' || input[i] == 'l' || input[i] == 'e') {
+                // What does this part do?
                 if(input[i] != '+' && input[i] != '-') {
                     lastIsDigit = false;
                 }
@@ -293,9 +299,9 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
 //FUNCTION MAIN MENU
 int mainMenu() {
     int menu;
-    cout << "=========================" << endl;
-    cout << "\tMAIN MENU\t" << endl;
-    cout << "=========================" << endl << endl;
+    cout << "=================================" << endl;
+    cout << "\t    MAIN MENU\t\t" << endl;
+    cout << "=================================" << endl << endl;
     cout << "1. Open scientific calculator" << endl;
     cout << "2. Open calculator history" << endl;
     cout << "0. Exit program" << endl << endl;
@@ -321,11 +327,13 @@ int main() {
     while(menu != 0) {
         //SCIENTIFIC CALCULATOR MENU
         if(menu == 1) {
-            cout << "=====================================" << endl;
-            cout << "\tSCIENTIFIC CALCULATOR\t" << endl;
-            cout << "=====================================" << endl;
-            cout << "Available operators: +, -, *, /, ^, (, ), sin, cos, tan, sqrt, log, ln" << endl;
-            cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl;
+            cout << "====================================================================" << endl;
+            cout << "\t\t\tSCIENTIFIC CALCULATOR\t" << endl;
+            cout << "====================================================================" << endl;
+            cout << "Available operators:" << endl;
+            cout << "Basic operators [+, -, *, /, ^, (, )]" << endl;
+            cout << "Advance operators [sin, cos, tan, sqrt, log, ln]" << endl;
+            cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl << endl;
 
             string input;
 
