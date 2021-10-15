@@ -331,7 +331,7 @@ int main() {
             cout << "====================================================================" << endl;
             cout << "Available operators:" << endl;
             cout << "Basic operators [+, -, *, /, ^, (, )]" << endl;
-            cout << "Advance operators [sin, cos, tan, sqrt, log, ln]" << endl;
+            cout << "Trigonometry and advanced operators [sin, cos, tan, sqrt, log, ln]" << endl;
             cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl << endl;
 
             string input;
