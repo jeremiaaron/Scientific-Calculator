@@ -75,7 +75,7 @@ void Queue::dequeue_At(Queue* queue, int pos)
 // Remove all expressions from queue
 void Queue::dequeue_All(Queue* queue) {
 	if (isEmpty(queue)) {
-		cout << "\tError! Empty History\t" << endl;
+		cout << "Error! Empty History" << endl;
 		return;
 	}
 	
