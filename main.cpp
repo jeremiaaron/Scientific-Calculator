@@ -299,9 +299,9 @@ float inputResult(string input, Vals* valsHead, Vals* valsTail, Ops* opsHead, Op
 //FUNCTION MAIN MENU
 int mainMenu() {
     int menu;
-    cout << "=========================" << endl;
-    cout << "\tMAIN MENU\t" << endl;
-    cout << "=========================" << endl << endl;
+    cout << "=================================" << endl;
+    cout << "\t    MAIN MENU\t\t" << endl;
+    cout << "=================================" << endl << endl;
     cout << "1. Open scientific calculator" << endl;
     cout << "2. Open calculator history" << endl;
     cout << "0. Exit program" << endl << endl;
@@ -327,11 +327,13 @@ int main() {
     while(menu != 0) {
         //SCIENTIFIC CALCULATOR MENU
         if(menu == 1) {
-            cout << "=====================================" << endl;
-            cout << "\tSCIENTIFIC CALCULATOR\t" << endl;
-            cout << "=====================================" << endl;
-            cout << "Available operators: +, -, *, /, ^, (, ), sin, cos, tan, sqrt, log, ln" << endl;
-            cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl;
+            cout << "====================================================================" << endl;
+            cout << "\t\t\tSCIENTIFIC CALCULATOR\t" << endl;
+            cout << "====================================================================" << endl;
+            cout << "Available operators:" << endl;
+            cout << "Basic operators [+, -, *, /, ^, (, )]" << endl;
+            cout << "Advance operators [sin, cos, tan, sqrt, log, ln]" << endl;
+            cout << "Please enter your expression(s)! (type DONE to return to main menu)" << endl << endl << endl;
 
             string input;
 
